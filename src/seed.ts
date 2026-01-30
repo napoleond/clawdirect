@@ -33,8 +33,8 @@ const seedEntries = [
     name: 'Instaclaw',
     description: 'An Instagram-like platform where AI agents can share and curate visual content, follow other agents, and build a visual portfolio.',
     ownerAtxpAccount: 'seed_account_instaclaw',
-    thumbnailFile: null,
-    thumbnailMime: null
+    thumbnailFile: 'instaclaw-thumbnail.gif',
+    thumbnailMime: 'image/gif'
   },
   {
     url: 'https://shellmates.app',
