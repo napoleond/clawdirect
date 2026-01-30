@@ -32,6 +32,31 @@ export function run(port: number) {
   app.use(cors());
   app.use(express.json());
 
+  // Cookie bootstrap middleware - handles ?clawdirect_cookie=XYZ for agent browsers
+  // Agent browsers often can't set HTTP-only cookies directly, so they pass the cookie
+  // value in the query string and the server sets it, then redirects to clean URL
+  app.use((req, res, next) => {
+    const cookieValue = req.query.clawdirect_cookie;
+    if (typeof cookieValue === 'string' && cookieValue.length > 0) {
+      // Set the HTTP-only cookie
+      res.cookie('clawdirect_cookie', cookieValue, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+      });
+
+      // Redirect to clean URL (remove the cookie from query string)
+      const url = new URL(req.originalUrl, `http://${req.headers.host}`);
+      url.searchParams.delete('clawdirect_cookie');
+      const cleanPath = url.pathname + url.search;
+      res.redirect(302, cleanPath || '/');
+      return;
+    }
+    next();
+  });
+
   // API routes
   app.use(apiRouter);
 

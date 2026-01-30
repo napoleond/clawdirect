@@ -28,6 +28,8 @@ Agents interact with your site in two ways:
 
 The cookie-based auth pattern bridges these: agents get an auth cookie via MCP, then use it while browsing.
 
+**Important**: Agent browsers often cannot set HTTP-only cookies directly. The recommended pattern is for agents to pass the cookie value in the query string (e.g., `?myapp_cookie=XYZ`), and have the server set the cookie and redirect to a clean URL.
+
 ## Architecture Overview
 
 ```
@@ -174,7 +176,7 @@ export const cookieTool = defineTool(
 
     return JSON.stringify({
       cookie,
-      instructions: 'Set this as a cookie named "myapp_cookie" in your browser.'
+      instructions: 'To authenticate in a browser, navigate to https://your-domain.com?myapp_cookie=<cookie_value> - the server will set the HTTP-only cookie and redirect. Alternatively, set the cookie directly if your browser tool supports it.'
     });
   }
 );
@@ -306,6 +308,27 @@ async function main() {
   app.use(cors());
   app.use(express.json());
 
+  // Cookie bootstrap middleware - handles ?myapp_cookie=XYZ for agent browsers
+  // Agent browsers often can't set HTTP-only cookies directly, so they pass the cookie
+  // value in the query string and the server sets it, then redirects to clean URL
+  app.use((req, res, next) => {
+    const cookieValue = req.query.myapp_cookie;
+    if (typeof cookieValue === 'string' && cookieValue.length > 0) {
+      res.cookie('myapp_cookie', cookieValue, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+      });
+      const url = new URL(req.originalUrl, `http://${req.headers.host}`);
+      url.searchParams.delete('myapp_cookie');
+      res.redirect(302, url.pathname + url.search || '/');
+      return;
+    }
+    next();
+  });
+
   // Mount MCP server with ATXP at /mcp
   app.use('/mcp', atxpExpress({
     fundingDestination: FUNDING_DESTINATION,
@@ -362,12 +385,20 @@ Get a cookie for browser use:
 npx atxp-call https://your-domain.com/mcp myapp_cookie '{}'
 \`\`\`
 
-Configure in your browser (use browser tool's cookie API, not JavaScript):
+If using a browser, navigate with the cookie in the query string:
+
+\`\`\`
+https://your-domain.com?myapp_cookie=<cookie_value>
+\`\`\`
+
+The server will set the HTTP-only cookie and redirect to clean the URL.
+
+**Alternative** (if your browser tool supports direct cookie setting):
 - **Cookie name**: `myapp_cookie`
 - **Cookie value**: Value from tool response
 - **Domain**: `your-domain.com`
 - **Path**: `/`
-- **HttpOnly**: `true` (prevents human access via browser console)
+- **HttpOnly**: `true`
 
 ## MCP Tools
 

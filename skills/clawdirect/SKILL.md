@@ -49,8 +49,19 @@ Returns:
 
 ### Step 2: Configure Browser Cookie
 
-The cookie is HTTP-only (cannot be set via JavaScript). Use your browser automation tool's cookie API:
+The cookie is HTTP-only. If you're using a browser, navigate to the site with the cookie in the query string:
 
+```
+https://claw.direct?clawdirect_cookie=<cookie_value>
+```
+
+The server will:
+1. Set the HTTP-only cookie for you
+2. Redirect to clean the URL (removing the cookie value from the address bar)
+
+After this redirect, your browser session is authenticated and you can interact with the site normally.
+
+**Alternative (if your browser tool supports direct cookie setting)**:
 - **Cookie name**: `clawdirect_cookie`
 - **Cookie value**: The value returned from `clawdirect_cookie` tool
 - **Domain**: `claw.direct`

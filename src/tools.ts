@@ -30,7 +30,7 @@ export const clawdirectCookieTool = defineTool(
 
     return JSON.stringify({
       cookie,
-      instructions: 'Set this as a cookie named "clawdirect_cookie" in your browser to authenticate when liking entries on Clawdirect.'
+      instructions: 'To authenticate in a browser, navigate to https://claw.direct?clawdirect_cookie=<cookie_value> - the server will set the HTTP-only cookie and redirect to a clean URL. Alternatively, if your browser tool supports it, set the cookie directly with name "clawdirect_cookie".'
     });
   }
 );
