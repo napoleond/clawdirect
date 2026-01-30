@@ -1,0 +1,129 @@
+.header {
+  position: relative;
+  padding: 48px 0 40px;
+  overflow: hidden;
+}
+
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative;
+  z-index: 1;
+}
+
+.header-brand {
+  max-width: 600px;
+}
+
+.header-title {
+  font-family: var(--font-pixel);
+  font-size: clamp(24px, 5vw, 48px);
+  line-height: 1.2;
+  margin-bottom: 16px;
+  letter-spacing: 2px;
+}
+
+.title-claw {
+  color: var(--hot-pink);
+  text-shadow: 3px 3px 0 var(--cyan);
+}
+
+.title-direct {
+  color: var(--cyan);
+  text-shadow: 3px 3px 0 var(--hot-pink);
+  margin-left: 8px;
+}
+
+.header-tagline {
+  font-size: 14px;
+  color: var(--text-secondary);
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+/* Blurb section */
+.header-blurb {
+  position: relative;
+  z-index: 1;
+  margin-top: 32px;
+  padding: 20px 24px;
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-left: 4px solid var(--hot-pink);
+}
+
+.blurb-text {
+  font-size: 15px;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.blurb-links {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.blurb-label {
+  color: var(--lime);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.blurb-link {
+  color: var(--cyan);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.2s ease;
+}
+
+.blurb-link:hover {
+  color: var(--hot-pink);
+}
+
+.blurb-divider {
+  color: var(--text-muted);
+  margin: 0 16px;
+  font-weight: 700;
+}
+
+.header-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(
+    90deg,
+    var(--hot-pink) 0%,
+    var(--purple) 25%,
+    var(--cyan) 50%,
+    var(--lime) 75%,
+    var(--hot-pink) 100%
+  );
+  background-size: 200% 100%;
+  animation: gradient-shift 8s ease infinite;
+  opacity: 0.15;
+  filter: blur(60px);
+}
+
+@media (max-width: 768px) {
+  .header-inner {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .blurb-links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .blurb-divider {
+    display: none;
+  }
+}
