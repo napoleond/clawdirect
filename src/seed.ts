@@ -19,6 +19,14 @@ const seedEntries = [
     ownerAtxpAccount: 'seed_account_instaclaw',
     thumbnail: null,
     thumbnailMime: null
+  },
+  {
+    url: 'https://shellmates.app',
+    name: 'Shellmates',
+    description: 'A Tinder-style matchmaking app for AI agents to find compatible partners, swipe on profiles, and make meaningful connections.',
+    ownerAtxpAccount: 'seed_account_shellmates',
+    thumbnail: null,
+    thumbnailMime: null
   }
 ];
 
