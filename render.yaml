@@ -6,8 +6,8 @@ services:
     plan: starter
     buildCommand: |
       npm install --include=dev &&
-      npm run build &&
-      cd frontend && npm install --include=dev && cd ..
+      cd frontend && npm install --include=dev && cd .. &&
+      npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
