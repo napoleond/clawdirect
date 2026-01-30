@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { readFileSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { getDb, addEntry, getEntryByUrl } from './db.js';
+import { getDb, addEntry, getEntryByUrl, updateEntry } from './db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -54,12 +54,22 @@ async function seed() {
 
   for (const entry of seedEntries) {
     const existing = getEntryByUrl(entry.url);
+    const thumbnail = entry.thumbnailFile ? loadThumbnail(entry.thumbnailFile) : null;
+
     if (existing) {
-      console.log(`  Skipping ${entry.name} - already exists`);
+      // Update thumbnail if entry exists but has no thumbnail and we have one
+      if (!existing.thumbnail && thumbnail && entry.thumbnailMime) {
+        updateEntry(entry.url, {
+          thumbnail,
+          thumbnailMime: entry.thumbnailMime
+        });
+        console.log(`  Updated ${entry.name} with thumbnail`);
+      } else {
+        console.log(`  Skipping ${entry.name} - already exists`);
+      }
       continue;
     }
 
-    const thumbnail = entry.thumbnailFile ? loadThumbnail(entry.thumbnailFile) : null;
     const id = addEntry(
       entry.url,
       entry.name,
