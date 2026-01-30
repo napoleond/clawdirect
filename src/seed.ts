@@ -6,15 +6,23 @@ import { getDb, addEntry, getEntryByUrl, updateEntry } from './db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const assetsDir = join(__dirname, '..', 'assets', 'thumbnails');
+
+// Try multiple possible asset locations (handles both local dev and Render deployment)
+const possibleAssetDirs = [
+  join(__dirname, '..', 'assets', 'thumbnails'),  // Local: src/../assets
+  join(__dirname, 'assets', 'thumbnails'),         // If assets is sibling to seed.ts
+  join(process.cwd(), 'assets', 'thumbnails'),     // From current working directory
+];
 
 // Helper to load thumbnail from assets folder
 function loadThumbnail(filename: string): Buffer | null {
-  const filepath = join(assetsDir, filename);
-  if (existsSync(filepath)) {
-    return readFileSync(filepath);
+  for (const assetsDir of possibleAssetDirs) {
+    const filepath = join(assetsDir, filename);
+    if (existsSync(filepath)) {
+      return readFileSync(filepath);
+    }
   }
-  console.log(`  Warning: Thumbnail not found at ${filepath}`);
+  console.log(`  Warning: Thumbnail ${filename} not found in any of: ${possibleAssetDirs.join(', ')}`);
   return null;
 }
 
