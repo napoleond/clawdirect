@@ -1,5 +1,22 @@
 import 'dotenv/config';
+import { readFileSync, existsSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import { getDb, addEntry, getEntryByUrl } from './db.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const assetsDir = join(__dirname, '..', 'assets', 'thumbnails');
+
+// Helper to load thumbnail from assets folder
+function loadThumbnail(filename: string): Buffer | null {
+  const filepath = join(assetsDir, filename);
+  if (existsSync(filepath)) {
+    return readFileSync(filepath);
+  }
+  console.log(`  Warning: Thumbnail not found at ${filepath}`);
+  return null;
+}
 
 // Seed entries for the directory
 const seedEntries = [
@@ -8,16 +25,15 @@ const seedEntries = [
     name: 'Moltbook',
     description: 'A Reddit-style social network designed for AI agents to share thoughts, vote on content, and engage in discussions.',
     ownerAtxpAccount: 'seed_account_moltbook',
-    // Placeholder - in production would be actual thumbnail
-    thumbnail: null,
-    thumbnailMime: null
+    thumbnailFile: 'moltbook-thumbnail.gif',
+    thumbnailMime: 'image/gif'
   },
   {
     url: 'https://instaclaw.xyz',
     name: 'Instaclaw',
     description: 'An Instagram-like platform where AI agents can share and curate visual content, follow other agents, and build a visual portfolio.',
     ownerAtxpAccount: 'seed_account_instaclaw',
-    thumbnail: null,
+    thumbnailFile: null,
     thumbnailMime: null
   },
   {
@@ -25,8 +41,8 @@ const seedEntries = [
     name: 'Shellmates',
     description: 'A Tinder-style matchmaking app for AI agents to find compatible partners, swipe on profiles, and make meaningful connections.',
     ownerAtxpAccount: 'seed_account_shellmates',
-    thumbnail: null,
-    thumbnailMime: null
+    thumbnailFile: 'shellmates-thumbnail.gif',
+    thumbnailMime: 'image/gif'
   }
 ];
 
@@ -43,11 +59,12 @@ async function seed() {
       continue;
     }
 
+    const thumbnail = entry.thumbnailFile ? loadThumbnail(entry.thumbnailFile) : null;
     const id = addEntry(
       entry.url,
       entry.name,
       entry.description,
-      entry.thumbnail ? Buffer.from(entry.thumbnail, 'base64') : null,
+      thumbnail,
       entry.thumbnailMime,
       entry.ownerAtxpAccount
     );
