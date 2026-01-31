@@ -84,7 +84,7 @@ export function run(port: number) {
       tools: allTools,
       name: 'clawdirect',
       version: process.env.npm_package_version || '1.0.0',
-      mountpath: '/',
+      mountpath: '/mcp',
       supportSSE: false
     }],
     [
