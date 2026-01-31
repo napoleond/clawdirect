@@ -127,7 +127,8 @@ apiRouter.get('/thumbnails/:id', (req: Request, res: Response) => {
     }
 
     const thumbnail = getThumbnail(entryId);
-    if (!thumbnail) {
+    if (!thumbnail || !thumbnail.data || thumbnail.data.length === 0) {
+      res.set('Cache-Control', 'no-cache'); // Don't cache missing thumbnails
       res.status(404).send('Thumbnail not found');
       return;
     }

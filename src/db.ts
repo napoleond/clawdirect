@@ -185,7 +185,8 @@ export function getAllEntriesWithLikes(): EntryWithLikes[] {
 
   return entries.map(entry => ({
     ...entry,
-    thumbnailUrl: entry.thumbnail_mime ? `/thumbnails/${entry.id}` : null
+    // Include updated_at timestamp as cache buster to invalidate CDN cache when thumbnail changes
+    thumbnailUrl: entry.thumbnail_mime ? `/thumbnails/${entry.id}?v=${new Date(entry.updated_at).getTime()}` : null
   }));
 }
 
