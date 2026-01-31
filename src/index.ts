@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { startHttpServer } from '@longrun/turtle';
+import { createHttpServer } from '@longrun/turtle';
 import { atxpExpress } from '@atxp/express';
 import { ATXPAccount } from '@atxp/common';
 import { RedisOAuthDb } from '@atxp/redis';
@@ -27,10 +27,18 @@ export function run(port: number) {
     });
   }
 
-  // Create Express app for additional routes
+  // Create Express app
   const app = express();
   app.use(cors());
   app.use(express.json());
+
+  // ATXP middleware at root level - handles .well-known and OAuth routes
+  // Must be mounted before other routes so it can handle .well-known/atxp discovery
+  app.use(atxpExpress({
+    destination: new ATXPAccount(FUNDING_DESTINATION_ATXP!),
+    payeeName: 'Clawdirect',
+    oAuthDb,
+  }));
 
   // Cookie bootstrap middleware - handles ?clawdirect_cookie=XYZ for agent browsers
   // Agent browsers often can't set HTTP-only cookies directly, so they pass the cookie
@@ -60,26 +68,8 @@ export function run(port: number) {
   // API routes
   app.use(apiRouter);
 
-  // Serve static frontend files in production
-  const frontendPath = path.join(__dirname, '..', 'frontend', 'dist');
-  app.use(express.static(frontendPath));
-
-  // SPA fallback - serve index.html for all non-API routes (Express 5 syntax)
-  app.use((req, res, next) => {
-    if (req.path.startsWith('/api') || req.path.startsWith('/thumbnails') || req.path.startsWith('/mcp') || req.path.startsWith('/.well-known')) {
-      return next();
-    }
-    // Only serve index.html for GET requests
-    if (req.method === 'GET') {
-      res.sendFile(path.join(frontendPath, 'index.html'));
-    } else {
-      next();
-    }
-  });
-
-  // Start the Turtle MCP server with Express middleware
-  startHttpServer(
-    port,
+  // Create MCP server router with ATXP middleware for tool payment handling
+  const mcpServer = createHttpServer(
     [{
       tools: allTools,
       name: 'clawdirect',
@@ -92,15 +82,35 @@ export function run(port: number) {
         destination: new ATXPAccount(FUNDING_DESTINATION_ATXP!),
         payeeName: 'Clawdirect',
         oAuthDb,
-      }),
-      app
+      })
     ]
   );
+  app.use(mcpServer);
 
-  console.log(`Clawdirect server running on port ${port}`);
-  console.log(`  - MCP endpoint: http://localhost:${port}/mcp`);
-  console.log(`  - API endpoint: http://localhost:${port}/api`);
-  console.log(`  - Frontend: http://localhost:${port}`);
+  // Serve static frontend files in production
+  const frontendPath = path.join(__dirname, '..', 'frontend', 'dist');
+  app.use(express.static(frontendPath));
+
+  // SPA fallback - serve index.html for all non-API routes
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/thumbnails') || req.path.startsWith('/mcp') || req.path.startsWith('/.well-known')) {
+      return next();
+    }
+    // Only serve index.html for GET requests
+    if (req.method === 'GET') {
+      res.sendFile(path.join(frontendPath, 'index.html'));
+    } else {
+      next();
+    }
+  });
+
+  // Start the server
+  app.listen(port, () => {
+    console.log(`Clawdirect server running on port ${port}`);
+    console.log(`  - MCP endpoint: http://localhost:${port}/mcp`);
+    console.log(`  - API endpoint: http://localhost:${port}/api`);
+    console.log(`  - Frontend: http://localhost:${port}`);
+  });
 }
 
 const isDirectRun = process.argv[1]
