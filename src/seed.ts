@@ -81,16 +81,18 @@ async function seed() {
     const thumbnail = entry.thumbnailFile ? loadThumbnail(entry.thumbnailFile) : null;
 
     if (existing) {
-      // Update thumbnail if entry exists but has no/empty thumbnail and we have one
-      const thumbnailMissing = !existing.thumbnail || existing.thumbnail.length === 0;
+      // Update thumbnail if entry exists but has no/empty/small thumbnail and we have one
+      // Consider thumbnails under 1KB as likely broken/corrupted
+      const thumbnailSize = existing.thumbnail ? existing.thumbnail.length : 0;
+      const thumbnailMissing = thumbnailSize < 1000;
       if (thumbnailMissing && thumbnail && entry.thumbnailMime) {
         updateEntry(entry.url, {
           thumbnail,
           thumbnailMime: entry.thumbnailMime
         });
-        console.log(`  Updated ${entry.name} with thumbnail (was missing/empty)`);
+        console.log(`  Updated ${entry.name} with thumbnail (was ${thumbnailSize} bytes, now ${thumbnail.length} bytes)`);
       } else {
-        console.log(`  Skipping ${entry.name} - already exists`);
+        console.log(`  Skipping ${entry.name} - already exists with ${thumbnailSize} byte thumbnail`);
       }
       continue;
     }
