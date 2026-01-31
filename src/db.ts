@@ -6,15 +6,25 @@ import crypto from 'crypto';
 // Use persistent disk path on Render, fallback to cwd for local dev
 function getDbPath(): string {
   if (process.env.DB_PATH) {
+    console.log(`[db] Using DB_PATH from env: ${process.env.DB_PATH}`);
     return process.env.DB_PATH;
   }
-  // Render persistent disk path
+  // Render persistent disk path - check if it exists and is writable
   const renderDiskPath = '/var/data/clawdirect.db';
-  if (fs.existsSync('/var/data')) {
-    return renderDiskPath;
+  try {
+    if (fs.existsSync('/var/data')) {
+      // Try to verify it's actually accessible
+      fs.accessSync('/var/data', fs.constants.W_OK);
+      console.log(`[db] Using Render persistent disk: ${renderDiskPath}`);
+      return renderDiskPath;
+    }
+  } catch (e) {
+    console.log(`[db] /var/data not accessible: ${e}`);
   }
   // Local development
-  return path.join(process.cwd(), 'clawdirect.db');
+  const localPath = path.join(process.cwd(), 'clawdirect.db');
+  console.log(`[db] Using local path: ${localPath}`);
+  return localPath;
 }
 
 const DB_PATH = getDbPath();

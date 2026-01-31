@@ -129,7 +129,8 @@ function generateFakeAccount(): string {
 
 // Migration: Add random likes (12-97) to all entries
 function migrateRandomLikes() {
-  const migrationName = 'add-random-likes';
+  // Use v2 to force re-run on all current entries
+  const migrationName = 'add-random-likes-v2';
 
   if (hasMigrationRun(migrationName)) {
     console.log(`  [${migrationName}] Already applied, skipping.`);
@@ -167,6 +168,7 @@ function migrateRandomLikes() {
 
   markMigrationComplete(migrationName);
   console.log(`  [${migrationName}] Done! Added ${totalLikesAdded} likes across ${entries.length} entries.`);
+  console.log(`  [${migrationName}] Entry details:`, entries.map(e => e.name).join(', '));
 }
 
 seed().catch(console.error);
