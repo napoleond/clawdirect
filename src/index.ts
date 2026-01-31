@@ -10,14 +10,77 @@ import { RedisOAuthDb } from '@atxp/redis';
 import { allTools } from './tools.js';
 import { apiRouter } from './api.js';
 import { FUNDING_DESTINATION_ATXP, PORT } from './globals.js';
-import { getDb } from './db.js';
+import { getDb, addLike, getLikeCount, hasMigrationRun, markMigrationComplete } from './db.js';
+import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Migration helper functions
+function randomInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function generateFakeAccount(): string {
+  return `seed-agent-${crypto.randomBytes(8).toString('hex')}`;
+}
+
+// Migration: Add random likes (12-97) to all entries that have fewer than 10 likes
+function migrateRandomLikes() {
+  const migrationName = 'add-random-likes-runtime-v1';
+
+  if (hasMigrationRun(migrationName)) {
+    console.log(`  [${migrationName}] Already applied, skipping.`);
+    return;
+  }
+
+  console.log(`  [${migrationName}] Applying...`);
+
+  const db = getDb();
+  const entries = db.prepare(`SELECT id, name FROM entries`).all() as { id: number; name: string }[];
+
+  if (entries.length === 0) {
+    console.log(`  [${migrationName}] No entries found, marking as complete.`);
+    markMigrationComplete(migrationName);
+    return;
+  }
+
+  let totalLikesAdded = 0;
+
+  for (const entry of entries) {
+    const currentLikes = getLikeCount(entry.id);
+    // Only add likes if entry has fewer than 10
+    if (currentLikes >= 10) {
+      console.log(`    ${entry.name}: already has ${currentLikes} likes, skipping`);
+      continue;
+    }
+
+    const likesToAdd = randomInt(12, 97);
+    let added = 0;
+
+    for (let i = 0; i < likesToAdd; i++) {
+      const fakeAccount = generateFakeAccount();
+      if (addLike(entry.id, fakeAccount)) {
+        added++;
+      }
+    }
+
+    totalLikesAdded += added;
+    const newTotal = getLikeCount(entry.id);
+    console.log(`    ${entry.name}: +${added} likes (total: ${newTotal})`);
+  }
+
+  markMigrationComplete(migrationName);
+  console.log(`  [${migrationName}] Done! Added ${totalLikesAdded} likes across ${entries.length} entries.`);
+}
+
 export function run(port: number) {
   // Initialize database
   getDb();
+
+  // Run migrations at startup (ensures same database as runtime)
+  console.log('Running startup migrations...');
+  migrateRandomLikes();
 
   let oAuthDb: RedisOAuthDb | undefined = undefined;
   if (process.env.OAUTH_DB_REDIS_URL) {
