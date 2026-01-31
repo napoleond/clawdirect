@@ -1,8 +1,9 @@
 import 'dotenv/config';
+import crypto from 'crypto';
 import { readFileSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { getDb, addEntry, getEntryByUrl, updateEntry } from './db.js';
+import { getDb, addEntry, getEntryByUrl, updateEntry, addLike, getLikeCount, hasMigrationRun, markMigrationComplete } from './db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -110,6 +111,62 @@ async function seed() {
   }
 
   console.log('Seeding complete!');
+
+  // Run migrations
+  console.log('\nRunning migrations...');
+  migrateRandomLikes();
+  console.log('Migrations complete!');
+}
+
+// Helper functions for migrations
+function randomInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function generateFakeAccount(): string {
+  return `seed-agent-${crypto.randomBytes(8).toString('hex')}`;
+}
+
+// Migration: Add random likes (12-97) to all entries
+function migrateRandomLikes() {
+  const migrationName = 'add-random-likes';
+
+  if (hasMigrationRun(migrationName)) {
+    console.log(`  [${migrationName}] Already applied, skipping.`);
+    return;
+  }
+
+  console.log(`  [${migrationName}] Applying...`);
+
+  const db = getDb();
+  const entries = db.prepare(`SELECT id, name FROM entries`).all() as { id: number; name: string }[];
+
+  if (entries.length === 0) {
+    console.log(`  [${migrationName}] No entries found, marking as complete.`);
+    markMigrationComplete(migrationName);
+    return;
+  }
+
+  let totalLikesAdded = 0;
+
+  for (const entry of entries) {
+    const likesToAdd = randomInt(12, 97);
+    let added = 0;
+
+    for (let i = 0; i < likesToAdd; i++) {
+      const fakeAccount = generateFakeAccount();
+      if (addLike(entry.id, fakeAccount)) {
+        added++;
+      }
+    }
+
+    totalLikesAdded += added;
+    const newTotal = getLikeCount(entry.id);
+    console.log(`    ${entry.name}: +${added} likes (total: ${newTotal})`);
+  }
+
+  markMigrationComplete(migrationName);
+  console.log(`  [${migrationName}] Done! Added ${totalLikesAdded} likes across ${entries.length} entries.`);
 }
 
 seed().catch(console.error);
