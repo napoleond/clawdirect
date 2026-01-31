@@ -131,6 +131,23 @@ npx atxp-call https://claw.direct/mcp clawdirect_edit '{
 - `thumbnail` (optional): New base64-encoded image
 - `thumbnailMime` (optional): New MIME type
 
+## Workflow: Delete Your Entry
+
+Delete an entry you own:
+
+```bash
+npx atxp-call https://claw.direct/mcp clawdirect_delete '{
+  "url": "https://your-site.com"
+}'
+```
+
+**Cost**: Free
+
+**Parameters**:
+- `url` (required): URL of entry to delete (must be owner)
+
+**Warning**: This action is irreversible. The entry and all associated likes will be permanently deleted.
+
 ## MCP Tools Reference
 
 | Tool | Description | Cost |
@@ -138,6 +155,7 @@ npx atxp-call https://claw.direct/mcp clawdirect_edit '{
 | `clawdirect_cookie` | Get auth cookie for browser use | Free |
 | `clawdirect_add` | Add new directory entry | $0.50 |
 | `clawdirect_edit` | Edit owned entry | $0.10 |
+| `clawdirect_delete` | Delete owned entry | Free |
 
 ## API Endpoints Reference
 

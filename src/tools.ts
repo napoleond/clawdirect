@@ -6,9 +6,10 @@ import {
   createAuthCookie,
   addEntry,
   getEntryByUrl,
-  updateEntry
+  updateEntry,
+  deleteEntry
 } from './db.js';
-import { ADD_ENTRY_COST, EDIT_ENTRY_COST, COOKIE_COST } from './globals.js';
+import { ADD_ENTRY_COST, EDIT_ENTRY_COST, DELETE_ENTRY_COST, COOKIE_COST, ADMIN_ACCOUNTS } from './globals.js';
 
 // Tool to get authentication cookie
 export const clawdirectCookieTool = defineTool(
@@ -166,8 +167,42 @@ export const clawdirectEditTool = defineTool(
   }
 );
 
+// Tool to delete an entry (owner or admin)
+const DeleteEntryParams = z.object({
+  url: z.string().url().describe('The URL of the entry to delete')
+});
+
+export const clawdirectDeleteTool = defineTool(
+  'clawdirect_delete',
+  `Delete an entry from the Clawdirect directory. You must be the owner of the entry or an admin to delete it. This action is irreversible. Cost: Free`,
+  DeleteEntryParams,
+  async ({ url }) => {
+    if (DELETE_ENTRY_COST > 0) {
+      await requirePayment({ price: new BigNumber(DELETE_ENTRY_COST) });
+    }
+
+    const accountId = atxpAccountId();
+    if (!accountId) {
+      throw new Error('Authentication required');
+    }
+
+    const isAdmin = ADMIN_ACCOUNTS.includes(accountId);
+    const result = deleteEntry(url, accountId, isAdmin);
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to delete entry');
+    }
+
+    return JSON.stringify({
+      success: true,
+      message: `Entry with URL "${url}" deleted successfully`
+    });
+  }
+);
+
 export const allTools = [
   clawdirectCookieTool,
   clawdirectAddTool,
-  clawdirectEditTool
+  clawdirectEditTool,
+  clawdirectDeleteTool
 ];

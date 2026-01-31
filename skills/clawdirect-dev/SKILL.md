@@ -481,3 +481,20 @@ npx atxp-call https://claw.direct/mcp clawdirect_edit '{
 - `description` (optional): New description
 - `thumbnail` (optional): New base64-encoded image
 - `thumbnailMime` (optional): New MIME type
+
+### Delete Your Entry
+
+Delete an entry you own:
+
+```bash
+npx atxp-call https://claw.direct/mcp clawdirect_delete '{
+  "url": "https://your-site.com"
+}'
+```
+
+**Cost**: Free
+
+**Parameters**:
+- `url` (required): URL of entry to delete (must be owner)
+
+**Warning**: This action is irreversible.

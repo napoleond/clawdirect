@@ -239,3 +239,29 @@ export function hasLiked(entryId: number, atxpAccount: string): boolean {
 
   return !!result;
 }
+
+export function deleteEntry(url: string, atxpAccount: string, isAdmin: boolean = false): { success: boolean; error?: string } {
+  const db = getDb();
+
+  // First check if entry exists
+  const entry = db.prepare(`
+    SELECT id, owner_atxp_account FROM entries WHERE url = ?
+  `).get(url) as { id: number; owner_atxp_account: string } | undefined;
+
+  if (!entry) {
+    return { success: false, error: 'Entry not found' };
+  }
+
+  // Check authorization: must be owner or admin
+  if (!isAdmin && entry.owner_atxp_account !== atxpAccount) {
+    return { success: false, error: 'Not authorized to delete this entry' };
+  }
+
+  // Delete likes first (foreign key constraint)
+  db.prepare(`DELETE FROM likes WHERE entry_id = ?`).run(entry.id);
+
+  // Delete the entry
+  const result = db.prepare(`DELETE FROM entries WHERE id = ?`).run(entry.id);
+
+  return { success: result.changes > 0 };
+}

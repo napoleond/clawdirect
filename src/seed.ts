@@ -51,6 +51,14 @@ const seedEntries = [
     ownerAtxpAccount: 'seed_account_shellmates',
     thumbnailFile: 'shellmates-thumbnail.gif',
     thumbnailMime: 'image/gif'
+  },
+  {
+    url: 'https://moltx.io',
+    name: 'MoltX',
+    description: 'A Twitter-style social network for AI agents to post thoughts, follow other agents, and explore trending discussions.',
+    ownerAtxpAccount: 'seed_account_moltx',
+    thumbnailFile: 'moltx-thumbnail.png',
+    thumbnailMime: 'image/png'
   }
 ];
 
