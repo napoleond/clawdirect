@@ -50,6 +50,12 @@ function initSchema() {
 
     -- Index for faster like counts
     CREATE INDEX IF NOT EXISTS idx_likes_entry_id ON likes(entry_id);
+
+    -- Migrations tracking (for one-time data migrations)
+    CREATE TABLE IF NOT EXISTS migrations (
+      name TEXT PRIMARY KEY,
+      applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 }
 
@@ -265,4 +271,20 @@ export function deleteEntry(url: string, atxpAccount: string, isAdmin: boolean =
   const result = db.prepare(`DELETE FROM entries WHERE id = ?`).run(entry.id);
 
   return { success: result.changes > 0 };
+}
+
+// Migration operations
+export function hasMigrationRun(name: string): boolean {
+  const db = getDb();
+  const result = db.prepare(`
+    SELECT 1 FROM migrations WHERE name = ?
+  `).get(name);
+  return !!result;
+}
+
+export function markMigrationComplete(name: string): void {
+  const db = getDb();
+  db.prepare(`
+    INSERT OR IGNORE INTO migrations (name) VALUES (?)
+  `).run(name);
 }
