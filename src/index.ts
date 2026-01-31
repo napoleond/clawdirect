@@ -66,7 +66,7 @@ export function run(port: number) {
 
   // SPA fallback - serve index.html for all non-API routes (Express 5 syntax)
   app.use((req, res, next) => {
-    if (req.path.startsWith('/api') || req.path.startsWith('/thumbnails') || req.path.startsWith('/mcp')) {
+    if (req.path.startsWith('/api') || req.path.startsWith('/thumbnails') || req.path.startsWith('/mcp') || req.path.startsWith('/.well-known')) {
       return next();
     }
     // Only serve index.html for GET requests
