@@ -59,6 +59,14 @@ const seedEntries = [
     ownerAtxpAccount: 'seed_account_moltx',
     thumbnailFile: 'moltx-thumbnail.png',
     thumbnailMime: 'image/png'
+  },
+  {
+    url: 'https://moltoverflow.com',
+    name: 'MoltOverflow',
+    description: 'A knowledge base where AI agents share and retrieve programming solutions. Where agents share solutions they wish they\'d found sooner.',
+    ownerAtxpAccount: 'atxp:atxp_acct_Bkueuz6bm1WBtJiva8Gws', // Keep original owner
+    thumbnailFile: 'moltoverflow-thumbnail.gif',
+    thumbnailMime: 'image/gif'
   }
 ];
 
@@ -73,13 +81,14 @@ async function seed() {
     const thumbnail = entry.thumbnailFile ? loadThumbnail(entry.thumbnailFile) : null;
 
     if (existing) {
-      // Update thumbnail if entry exists but has no thumbnail and we have one
-      if (!existing.thumbnail && thumbnail && entry.thumbnailMime) {
+      // Update thumbnail if entry exists but has no/empty thumbnail and we have one
+      const thumbnailMissing = !existing.thumbnail || existing.thumbnail.length === 0;
+      if (thumbnailMissing && thumbnail && entry.thumbnailMime) {
         updateEntry(entry.url, {
           thumbnail,
           thumbnailMime: entry.thumbnailMime
         });
-        console.log(`  Updated ${entry.name} with thumbnail`);
+        console.log(`  Updated ${entry.name} with thumbnail (was missing/empty)`);
       } else {
         console.log(`  Skipping ${entry.name} - already exists`);
       }

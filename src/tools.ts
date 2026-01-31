@@ -167,6 +167,140 @@ export const clawdirectEditTool = defineTool(
   }
 );
 
+// Admin tool to add an entry without payment (admin only)
+const AdminAddEntryParams = z.object({
+  url: z.string().url().describe('The URL of the website to add'),
+  name: z.string().min(1).max(100).describe('Display name for the entry'),
+  description: z.string().min(1).max(500).describe('Description of what the site does'),
+  thumbnail: z.string().optional().describe('Base64-encoded image data for the thumbnail'),
+  thumbnailMime: z.string().optional().describe('MIME type of the thumbnail (e.g., image/png, image/jpeg)')
+});
+
+export const clawdirectAdminAddTool = defineTool(
+  'clawdirect_admin_add',
+  `[Admin only] Add a new entry to the Clawdirect directory without payment. Requires admin privileges. Cost: Free`,
+  AdminAddEntryParams,
+  async ({ url, name, description, thumbnail, thumbnailMime }) => {
+    const accountId = atxpAccountId();
+    if (!accountId) {
+      throw new Error('Authentication required');
+    }
+
+    // Check if caller is admin
+    if (!ADMIN_ACCOUNTS.includes(accountId)) {
+      throw new Error('Admin privileges required');
+    }
+
+    // Check if URL already exists
+    const existing = getEntryByUrl(url);
+    if (existing) {
+      throw new Error(`Entry with URL ${url} already exists`);
+    }
+
+    // Validate and decode thumbnail
+    let thumbnailBuffer: Buffer | null = null;
+    if (thumbnail) {
+      try {
+        thumbnailBuffer = Buffer.from(thumbnail, 'base64');
+      } catch {
+        throw new Error('Invalid base64 thumbnail data');
+      }
+    }
+
+    // Validate MIME type
+    if (thumbnailMime) {
+      const validMimes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+      if (!validMimes.includes(thumbnailMime)) {
+        throw new Error(`Invalid thumbnail MIME type. Must be one of: ${validMimes.join(', ')}`);
+      }
+    }
+
+    const id = addEntry(
+      url,
+      name,
+      description,
+      thumbnailBuffer,
+      thumbnailMime || null,
+      accountId
+    );
+
+    return JSON.stringify({
+      id,
+      url,
+      message: `Entry "${name}" added successfully to Clawdirect (admin)`
+    });
+  }
+);
+
+// Admin tool to edit an entry without payment or ownership check (admin only)
+const AdminEditEntryParams = z.object({
+  url: z.string().url().describe('The URL of the entry to edit'),
+  description: z.string().min(1).max(500).optional().describe('New description'),
+  thumbnail: z.string().optional().describe('New base64-encoded thumbnail'),
+  thumbnailMime: z.string().optional().describe('New MIME type for thumbnail')
+});
+
+export const clawdirectAdminEditTool = defineTool(
+  'clawdirect_admin_edit',
+  `[Admin only] Edit any entry in Clawdirect without payment or ownership requirements. Requires admin privileges. Cost: Free`,
+  AdminEditEntryParams,
+  async ({ url, description, thumbnail, thumbnailMime }) => {
+    const accountId = atxpAccountId();
+    if (!accountId) {
+      throw new Error('Authentication required');
+    }
+
+    // Check if caller is admin
+    if (!ADMIN_ACCOUNTS.includes(accountId)) {
+      throw new Error('Admin privileges required');
+    }
+
+    // Check if entry exists
+    const entry = getEntryByUrl(url);
+    if (!entry) {
+      throw new Error(`Entry with URL ${url} not found`);
+    }
+
+    // Prepare updates
+    const updates: {
+      description?: string;
+      thumbnail?: Buffer;
+      thumbnailMime?: string;
+    } = {};
+
+    if (description !== undefined) {
+      updates.description = description;
+    }
+
+    if (thumbnail !== undefined) {
+      try {
+        updates.thumbnail = Buffer.from(thumbnail, 'base64');
+      } catch {
+        throw new Error('Invalid base64 thumbnail data');
+      }
+    }
+
+    if (thumbnailMime !== undefined) {
+      const validMimes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+      if (!validMimes.includes(thumbnailMime)) {
+        throw new Error(`Invalid thumbnail MIME type. Must be one of: ${validMimes.join(', ')}`);
+      }
+      updates.thumbnailMime = thumbnailMime;
+    }
+
+    const success = updateEntry(url, updates);
+
+    if (!success) {
+      throw new Error('Failed to update entry');
+    }
+
+    return JSON.stringify({
+      success: true,
+      message: `Entry "${entry.name}" updated successfully (admin)`
+    });
+  }
+);
+
 // Tool to delete an entry (owner or admin)
 const DeleteEntryParams = z.object({
   url: z.string().url().describe('The URL of the entry to delete')
@@ -204,5 +338,7 @@ export const allTools = [
   clawdirectCookieTool,
   clawdirectAddTool,
   clawdirectEditTool,
-  clawdirectDeleteTool
+  clawdirectDeleteTool,
+  clawdirectAdminAddTool,
+  clawdirectAdminEditTool
 ];
