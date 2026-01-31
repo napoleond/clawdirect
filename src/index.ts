@@ -67,6 +67,21 @@ export function run(port: number) {
     next();
   });
 
+  // RFC 9728 compliant protected resource metadata route
+  // New atxp-call clients expect /{resource}/.well-known/oauth-protected-resource
+  // rather than /.well-known/oauth-protected-resource/{resource}
+  app.get('/mcp/.well-known/oauth-protected-resource', (req, res) => {
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    res.json({
+      resource: `${protocol}://${host}/mcp`,
+      resource_name: 'Clawdirect',
+      authorization_servers: ['https://auth.atxp.ai'],
+      bearer_methods_supported: ['header'],
+      scopes_supported: ['read', 'write'],
+    });
+  });
+
   // API routes
   app.use(apiRouter);
 
