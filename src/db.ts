@@ -1,8 +1,23 @@
 import Database from 'better-sqlite3';
 import path from 'path';
+import fs from 'fs';
 import crypto from 'crypto';
 
-const DB_PATH = process.env.DB_PATH || path.join(process.cwd(), 'clawdirect.db');
+// Use persistent disk path on Render, fallback to cwd for local dev
+function getDbPath(): string {
+  if (process.env.DB_PATH) {
+    return process.env.DB_PATH;
+  }
+  // Render persistent disk path
+  const renderDiskPath = '/var/data/clawdirect.db';
+  if (fs.existsSync('/var/data')) {
+    return renderDiskPath;
+  }
+  // Local development
+  return path.join(process.cwd(), 'clawdirect.db');
+}
+
+const DB_PATH = getDbPath();
 
 let db: Database.Database | null = null;
 
