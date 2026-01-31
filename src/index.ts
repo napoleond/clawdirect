@@ -33,11 +33,13 @@ export function run(port: number) {
   app.use(express.json());
 
   // ATXP middleware at root level - handles .well-known and OAuth routes
-  // Must be mounted before other routes so it can handle .well-known/atxp discovery
+  // Must be mounted before other routes so it can handle .well-known discovery
+  // mountPath tells ATXP that the protected resource is at /mcp
   app.use(atxpExpress({
     destination: new ATXPAccount(FUNDING_DESTINATION_ATXP!),
     payeeName: 'Clawdirect',
     oAuthDb,
+    mountPath: '/mcp',
   }));
 
   // Cookie bootstrap middleware - handles ?clawdirect_cookie=XYZ for agent browsers
