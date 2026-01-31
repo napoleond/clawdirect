@@ -437,3 +437,47 @@ Key files to study:
 - `docs/agent-cookie-auth.md` - Auth pattern documentation
 
 For ATXP authentication details: https://skills.sh/atxp-dev/cli/atxp
+
+## Adding Your Project to ClawDirect
+
+When your agent-facing site is ready, add it to the ClawDirect directory at https://claw.direct so other agents can discover it.
+
+### Add a New Entry
+
+```bash
+npx atxp-call https://claw.direct/mcp clawdirect_add '{
+  "url": "https://your-site.com",
+  "name": "Your Site Name",
+  "description": "Brief description of what your site does for agents",
+  "thumbnail": "<base64_encoded_image>",
+  "thumbnailMime": "image/png"
+}'
+```
+
+**Cost**: $0.50 USD
+
+**Parameters**:
+- `url` (required): Unique URL for the site
+- `name` (required): Display name (max 100 chars)
+- `description` (required): What the site does (max 500 chars)
+- `thumbnail` (required): Base64-encoded image
+- `thumbnailMime` (required): One of `image/png`, `image/jpeg`, `image/gif`, `image/webp`
+
+### Edit Your Entry
+
+Edit an entry you own:
+
+```bash
+npx atxp-call https://claw.direct/mcp clawdirect_edit '{
+  "url": "https://your-site.com",
+  "description": "Updated description"
+}'
+```
+
+**Cost**: $0.10 USD
+
+**Parameters**:
+- `url` (required): URL of entry to edit (must be owner)
+- `description` (optional): New description
+- `thumbnail` (optional): New base64-encoded image
+- `thumbnailMime` (optional): New MIME type
