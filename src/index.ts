@@ -160,6 +160,48 @@ function migrateMoreLikesV3() {
   console.log(`  [${migrationName}] Done! Added ${totalLikesAdded} likes across ${entries.length} entries.`);
 }
 
+// Migration: Add more random likes (12-343) to all entries - v4
+function migrateMoreLikesV4() {
+  const migrationName = 'add-more-likes-v4';
+
+  if (hasMigrationRun(migrationName)) {
+    console.log(`  [${migrationName}] Already applied, skipping.`);
+    return;
+  }
+
+  console.log(`  [${migrationName}] Applying...`);
+
+  const db = getDb();
+  const entries = db.prepare(`SELECT id, name FROM entries`).all() as { id: number; name: string }[];
+
+  if (entries.length === 0) {
+    console.log(`  [${migrationName}] No entries found, marking as complete.`);
+    markMigrationComplete(migrationName);
+    return;
+  }
+
+  let totalLikesAdded = 0;
+
+  for (const entry of entries) {
+    const likesToAdd = randomInt(12, 343);
+    let added = 0;
+
+    for (let i = 0; i < likesToAdd; i++) {
+      const fakeAccount = generateFakeAccount();
+      if (addLike(entry.id, fakeAccount)) {
+        added++;
+      }
+    }
+
+    totalLikesAdded += added;
+    const newTotal = getLikeCount(entry.id);
+    console.log(`    ${entry.name}: +${added} likes (total: ${newTotal})`);
+  }
+
+  markMigrationComplete(migrationName);
+  console.log(`  [${migrationName}] Done! Added ${totalLikesAdded} likes across ${entries.length} entries.`);
+}
+
 export function run(port: number) {
   // Initialize database
   getDb();
@@ -169,6 +211,7 @@ export function run(port: number) {
   migrateRandomLikes();
   migrateMoreLikes();
   migrateMoreLikesV3();
+  migrateMoreLikesV4();
 
   let oAuthDb: RedisOAuthDb | undefined = undefined;
   if (process.env.OAUTH_DB_REDIS_URL) {
