@@ -353,6 +353,48 @@ function migrateMoreLikesV7() {
   console.log(`  [${migrationName}] Done! Added ${totalLikesAdded} likes across ${entries.length} entries.`);
 }
 
+// Migration: Add more random likes (12-343) to all entries - v8
+function migrateMoreLikesV8() {
+  const migrationName = 'add-more-likes-v8';
+
+  if (hasMigrationRun(migrationName)) {
+    console.log(`  [${migrationName}] Already applied, skipping.`);
+    return;
+  }
+
+  console.log(`  [${migrationName}] Applying...`);
+
+  const db = getDb();
+  const entries = db.prepare(`SELECT id, name FROM entries`).all() as Entry[];
+
+  if (entries.length === 0) {
+    console.log(`  [${migrationName}] No entries found, marking as complete.`);
+    markMigrationComplete(migrationName);
+    return;
+  }
+
+  let totalLikesAdded = 0;
+
+  for (const entry of entries) {
+    const likesToAdd = randomInt(12, 343);
+    let added = 0;
+
+    for (let i = 0; i < likesToAdd; i++) {
+      const fakeAccount = generateFakeAccount();
+      if (addLike(entry.id, fakeAccount)) {
+        added++;
+      }
+    }
+
+    totalLikesAdded += added;
+    const newTotal = getLikeCount(entry.id);
+    console.log(`    ${entry.name}: +${added} likes (total: ${newTotal})`);
+  }
+
+  markMigrationComplete(migrationName);
+  console.log(`  [${migrationName}] Done! Added ${totalLikesAdded} likes across ${entries.length} entries.`);
+}
+
 // Run all migrations
 async function migrate() {
   console.log('Running migrations...\n');
@@ -369,6 +411,7 @@ async function migrate() {
   migrateMoreLikesV5();
   migrateMoreLikesV6();
   migrateMoreLikesV7();
+  migrateMoreLikesV8();
 
   console.log('\nMigrations complete!');
 }
