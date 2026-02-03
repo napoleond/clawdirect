@@ -3,7 +3,7 @@
  * Admin script to edit entries in Clawdirect
  *
  * Usage:
- *   npx tsx src/admin-edit.ts --url <url> [--description <desc>] [--thumbnail <path>]
+ *   npx tsx src/admin-edit.ts --url <url> [--name <name>] [--newUrl <newUrl>] [--description <desc>] [--thumbnail <path>]
  *
  * Requires DB_PATH environment variable to point to the database if not using local default.
  */
@@ -30,13 +30,15 @@ function parseArgs(args: string[]): Record<string, string> {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
 
-  const { url, description, thumbnail } = args;
+  const { url, name, newUrl, description, thumbnail } = args;
 
   if (!url) {
-    console.error('Usage: npx tsx src/admin-edit.ts --url <url> [--description <desc>] [--thumbnail <path>]');
+    console.error('Usage: npx tsx src/admin-edit.ts --url <url> [--name <name>] [--newUrl <newUrl>] [--description <desc>] [--thumbnail <path>]');
     console.error('\nRequired:');
     console.error('  --url         URL of the entry to edit');
     console.error('\nOptional:');
+    console.error('  --name        New display name');
+    console.error('  --newUrl      New URL for the entry');
     console.error('  --description New description');
     console.error('  --thumbnail   Path to new thumbnail image (png, jpg, gif, webp)');
     process.exit(1);
@@ -53,10 +55,22 @@ async function main() {
 
   // Prepare updates
   const updates: {
+    name?: string;
+    newUrl?: string;
     description?: string;
     thumbnail?: Buffer;
     thumbnailMime?: string;
   } = {};
+
+  if (name) {
+    updates.name = name;
+    console.log(`  New name: ${name}`);
+  }
+
+  if (newUrl) {
+    updates.newUrl = newUrl;
+    console.log(`  New URL: ${newUrl}`);
+  }
 
   if (description) {
     updates.description = description;

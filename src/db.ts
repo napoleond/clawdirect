@@ -160,6 +160,8 @@ export function getEntryById(id: number): Entry | null {
 export function updateEntry(
   url: string,
   updates: {
+    name?: string;
+    newUrl?: string;
     description?: string;
     thumbnail?: Buffer;
     thumbnailMime?: string;
@@ -169,6 +171,16 @@ export function updateEntry(
 
   const setClauses: string[] = ['updated_at = CURRENT_TIMESTAMP'];
   const values: (string | Buffer)[] = [];
+
+  if (updates.name !== undefined) {
+    setClauses.push('name = ?');
+    values.push(updates.name);
+  }
+
+  if (updates.newUrl !== undefined) {
+    setClauses.push('url = ?');
+    values.push(updates.newUrl);
+  }
 
   if (updates.description !== undefined) {
     setClauses.push('description = ?');
