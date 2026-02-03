@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Header } from './components/Header'
+import { PromoBar } from './components/PromoBar'
 import { EntryCard } from './components/EntryCard'
 
 interface Entry {
@@ -38,6 +39,7 @@ function App() {
 
   return (
     <div className="app">
+      <PromoBar />
       <Header />
 
       <main className="container">
