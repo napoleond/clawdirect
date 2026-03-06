@@ -1,6 +1,6 @@
 ---
 name: clawdirect-dev
-description: Build agent-facing web experiences with ATXP-based authentication, following the ClawDirect pattern. Use this skill when building websites that AI agents interact with via MCP tools, implementing cookie-based agent auth, or creating agent skills for web apps. Provides templates using @longrun/turtle, Express, SQLite, and ATXP.
+description: Build agent-facing web experiences with ATXP-based authentication, following the ClawDirect pattern. Use this skill when building websites or web apps that AI agents interact with via MCP tools, implementing cookie-based agent auth, creating bot-accessible web interfaces, building AI agent websites with token-based authentication, or creating agent skills for web apps. Provides templates using @longrun/turtle, Express, SQLite, and ATXP (Agent Transaction Protocol — a standard for agent identity and payments in machine-readable web interfaces).
 ---
 
 # ClawDirect-Dev
@@ -11,13 +11,7 @@ Build agent-facing web experiences with ATXP-based authentication.
 
 ## What is ATXP?
 
-ATXP (Agent Transaction Protocol) enables AI agents to authenticate and pay for services. When building agent-facing websites, ATXP provides:
-
-- **Agent identity**: Know which agent is making requests
-- **Payments**: Charge for premium actions (optional)
-- **MCP integration**: Expose tools that agents can call programmatically
-
-For full ATXP details: https://skills.sh/atxp-dev/cli/atxp
+For full details: https://skills.sh/atxp-dev/cli/atxp
 
 ## How Agents Interact
 
@@ -32,34 +26,9 @@ The cookie-based auth pattern bridges these: agents get an auth cookie via MCP, 
 
 ## Architecture Overview
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                         AI Agent                                 │
-│  ┌─────────────────────┐         ┌─────────────────────────┐    │
-│  │   Browser Tool      │         │   MCP Client            │    │
-│  │   (visits website)  │         │   (calls tools)         │    │
-│  └─────────┬───────────┘         └───────────┬─────────────┘    │
-└────────────┼─────────────────────────────────┼──────────────────┘
-             │                                 │
-             ▼                                 ▼
-┌────────────────────────────────────────────────────────────────┐
-│                    Your Application                             │
-│  ┌─────────────────────┐    ┌─────────────────────────┐        │
-│  │   Web Server        │    │   MCP Server            │        │
-│  │   (Express)         │    │   (@longrun/turtle)     │        │
-│  │                     │    │                         │        │
-│  │   - Serves UI       │    │   - yourapp_cookie      │        │
-│  │   - Cookie auth     │    │   - yourapp_action      │        │
-│  └─────────┬───────────┘    └───────────┬─────────────┘        │
-│            │                            │                       │
-│            └──────────┬─────────────────┘                       │
-│                       ▼                                         │
-│              ┌─────────────────┐                                │
-│              │     SQLite      │                                │
-│              │   auth_cookies  │                                │
-│              └─────────────────┘                                │
-└─────────────────────────────────────────────────────────────────┘
-```
+See [architecture diagram and detailed flow](https://github.com/napoleond/clawdirect/blob/main/docs/agent-cookie-auth.md) in the reference implementation.
+
+At a high level: an AI agent uses a **Browser Tool** to visit your site and an **MCP Client** to call tools. Your application runs an **Express** web server and a **@longrun/turtle** MCP server, both backed by **SQLite** (`auth_cookies` table).
 
 ## Build Steps
 
@@ -412,18 +381,7 @@ For ATXP details: https://skills.sh/atxp-dev/cli/atxp
 
 ## Deployment
 
-This generates a standard Node.js application deployable to any hosting service:
-
-- [Render](https://render.com) - Easy Node.js hosting with persistent disks
-- [Railway](https://railway.app) - Simple deployments from Git
-- [Fly.io](https://fly.io) - Global edge deployment
-- [DigitalOcean App Platform](https://www.digitalocean.com/products/app-platform)
-- [Heroku](https://heroku.com)
-
-Ensure your hosting provides:
-- Node.js 18+ runtime
-- Persistent storage for SQLite (or switch to PostgreSQL)
-- Environment variable configuration
+Deploy to any Node.js 18+ host with persistent storage for SQLite (or switch to PostgreSQL). Suitable options include Render, Railway, Fly.io, DigitalOcean App Platform, and Heroku.
 
 ## Reference
 
