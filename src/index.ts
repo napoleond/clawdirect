@@ -395,6 +395,8 @@ export function run(port: number) {
 
   // Create Express app
   const app = express();
+  // Trust Render + Cloudflare proxies so req.ip resolves to real client IPs
+  app.set('trust proxy', parseInt(process.env.TRUST_PROXY_COUNT || '1'));
   app.use(cors());
   app.use(express.json());
 
@@ -452,13 +454,16 @@ export function run(port: number) {
   app.use(apiRouter);
 
   // Create MCP server router with ATXP middleware for tool payment handling
+  // Disable turtle's built-in 60/min per-IP rate limiter — behind proxies,
+  // req.ip resolves to shared edge IPs, unfairly throttling all clients.
   const mcpServer = createHttpServer(
     [{
       tools: allTools,
       name: 'clawdirect',
       version: process.env.npm_package_version || '1.0.0',
       mountpath: '/mcp',
-      supportSSE: false
+      supportSSE: false,
+      rateLimitConfig: { limit: 100000 },
     }],
     [
       atxpExpress({
