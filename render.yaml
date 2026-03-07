@@ -19,6 +19,8 @@ services:
         sync: false  # Set manually in Render dashboard
       - key: DB_PATH
         value: /var/data/clawdirect.db
+      - key: TRUST_PROXY_COUNT
+        value: "2"
     disk:
       name: clawdirect-data
       mountPath: /var/data
